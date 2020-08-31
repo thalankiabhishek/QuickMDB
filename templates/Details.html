@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title style="align: center">IMDB Details</title>
+</head>
+
+<div>
+    <h1 style="font-size:100px;" align="center" ;><font face="Optima">
+        INDIA SPOTLIGHT
+    </font></h1>
+</div>
+
+<body bgcolor="#34495E"><font face="Optima">
+    <div >
+        <table class="Movie">
+            <tbody>
+            <tr>
+                <td colspan="2" style="font-size:40px" align="center";>{{Name}}</td>
+                <td style="text-align: right; vertical-align: middle;">IMDB Popularity: </td>
+                <td style="text-align: left; vertical-align: middle;">{{df.loc[df.Name==Name, 'Vote'].values[0]}}%</td>
+            </tr>
+
+            <tr>
+                <td rowspan="3"><img {{df.loc[df.Name==Name, 'Poster'].values[0].split(' ')[1]|safe}} width="150"></td>
+                <td>{{' | '.join(df.loc[df.Name==Name, 'Genres'].values[0])}}</td>
+                <td>{{df.loc[df.Name==Name, 'Language'].values[0]}}</td>
+                <td>{{df.loc[df.Name==Name, 'Release_Date'].values[0].strftime(format="%d %B %Y")}}</td>
+            </tr>
+
+            <tr>
+                <td colspan="4">{{', '.join(df.loc[df.Name==Name, 'Stars'].values[0])}}</td>
+            </tr>
+
+            <tr>
+                <td colspan="4">{{df.loc[df.Name==Name, 'Summary'].values[0]}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</font></body>
+</html>

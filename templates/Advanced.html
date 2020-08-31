@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IMDB Details</title>
+</head>
+
+<div align="center">
+    <h1 style="font-size:100px";> <font face="Optima" >
+        INDIA SPOTLIGHT
+    </font></h1>
+    <h2 style="font-size:40px";> <font face="Optima" >
+        Most Anticipated Indian Movies and Shows
+    </font></h2>
+</div>
+
+<body bgcolor="#34495E"> <font face="Optima">
+    <div style="width:'fit'" align="center">
+        <form method="POST">
+            <select id="Movies" name="Movies">
+                {% for i in range(0, len) %}
+                <option value="{{ df['Name'][i] }}">{{ df['Name'][i] }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Submit", value="Go">
+        </form>
+    </div>
+</body>
+</html>
