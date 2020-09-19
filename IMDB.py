@@ -1,9 +1,27 @@
+# ssh -i [AWS Private Key] [Name]@[Address] for connecting using terminal
+
+# scp -i [AWS Private Key] -r [Folder/File to be copied] [Name]@[Address] for transferring files to cloud server using terminal
+
 import pandas as pd
 import re
 
 import requests as r
 from bs4 import BeautifulSoup
 from IPython.display import HTML
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import nltk
+# nltk.download(['stopwords', 'wordnet', 'punkt'])
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import sent_tokenize, WordPunctTokenizer
+import string
+
+wpt = WordPunctTokenizer()
+punkt = string.punctuation
+wnl = WordNetLemmatizer()
+
 from flask import Flask, request, render_template, url_for, redirect
 
 app = Flask(__name__)
@@ -20,7 +38,6 @@ movie_container = soup_lxml.find_all('div', class_="trending-list-rank-item")
 
 df = pd.DataFrame(columns=['Name', 'Poster', 'Release_Date', 'Summary', 'Stars', 'Vote'])
 for movie in movie_container:
-    print
     mv_link = movie.find('span', class_="trending-list-rank-item-name").find('a').get('href')
     mv_name = movie.find('span', class_="trending-list-rank-item-name").find('a').get_text()
     mv_link = BeautifulSoup(r.get(f'https://www.imdb.com{mv_link}').text, 'lxml')
@@ -33,8 +50,11 @@ for movie in movie_container:
     except:
         date = (re.findall(r"\d+", date.get_text())[0])
 
-    summary = mv_link.find('div', class_='article', id="titleStoryLine").find('div', class_='inline canwrap').find(
+    try:
+        summary = mv_link.find('div', class_='article', id="titleStoryLine").find('div', class_='inline canwrap').find(
         'span').get_text().strip()
+    except:
+        summary = None
     genre = [i.get_text().strip() for i in mv_link.find('div', class_='subtext').find_all('a') if 'genre' in str(i)]
 
     image = '<img src="' + mv_link.find('div', class_='poster').find('img').get('src') + '" width="150" >'
@@ -51,6 +71,21 @@ for movie in movie_container:
     df = df.append({'Name': mv_name, 'Poster': image, 'Release_Date': date, "Genres": genre,
                     'Summary': summary, 'Stars': cast, "Language": language, "Vote":vote},
                    ignore_index=True)
+
+movies = pd.read_csv('movies.csv')
+movies.drop(['Unnamed: 0', 'imdbId', 'rating'], 1, inplace=True)
+movies.columns = ['Name', 'Genres', 'Summary', 'Poster']
+movies = pd.concat([df, movies], axis=0)
+movies = movies[movies.Summary.isna() != True].dropna(axis=1)
+
+def recomMovie(selected_movie, n=5):
+    cv = CountVectorizer(stop_words='english')
+    cntarray = cv.fit_transform(pd.Series(str(i)+"|"+str(j) for i in df.Genres for j in df.Summary))
+    selected_index = movies[movies.Name.str.contains(selected_movie)].index.values[0]
+    similar_movies =  list(enumerate(cosine_similarity(cntarray)[selected_index]))
+    sorted_similar_movies = sorted(similar_movies, key=lambda x:x[1],reverse=True)[1:]
+    recommendations = [movies[movies.index == i[0]]["Name"].values[0] for i in sorted_similar_movies[:n]]
+    return recommendations
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -83,9 +118,16 @@ def expert():
 def advanced():
     if request.method == 'POST':
         name = request.form.get('Movies')
-        return render_template('Details.html',df=df, Name=name)
+        recommendations = recomMovie(name)
+        images = [movies[movies.Name == recom].Poster.values[0] for recom in recommendations]
+        return render_template('Details.html',df=df, Name=name, images = images, recommendations=recommendations)
     else: redirect('/Advanced')
     return render_template('Advanced.html', df=df, len=len(df))
 
+# # Uncomment if running locally
 if __name__ == '__main__':
-    app.run(debug=True)
+   app.run(debug=True)
+
+# # Uncomment if running on a Cloud Server
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=8080)

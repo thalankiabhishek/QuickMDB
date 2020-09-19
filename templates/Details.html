@@ -12,7 +12,7 @@
 
 <body bgcolor="#34495E"><font face="Optima">
     <div >
-        <table class="Movie">
+        <table class="Movie"; align="center" ;>
             <tbody>
             <tr>
                 <td colspan="2" style="font-size:40px" align="center";>{{Name}}</td>
@@ -35,6 +35,20 @@
                 <td colspan="4">{{df.loc[df.Name==Name, 'Summary'].values[0]}}</td>
             </tr>
             </tbody>
+        </table>
+    </div>
+
+    <div>
+        <table  style="font-size:100px;" align="center" ;><font face="Optima">
+            <thead>
+            <tr>
+                {% for i in images %}
+                <th>
+                    <img src={{ i }} width="150" height="200">
+                </th>
+                {% endfor %}
+            </tr>
+            </thead>
         </table>
     </div>
 </font></body>
